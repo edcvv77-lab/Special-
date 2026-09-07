@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth?.dart';
+import 'package:cloud_firestore/cloud_firestore?.dart';
 import '../models/user_profile.dart';
 
 class AuthProvider with ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseAuth? _auth;
+  FirebaseFirestore? _firestore;
+
 
   UserProfile? _userProfile;
   bool _isLoading = false;
@@ -15,11 +16,17 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   AuthProvider() {
+    try {
+      _auth = FirebaseAuth.instance;
+      _firestore = FirebaseFirestore.instance;
+    } catch(e) {
+      print("Firebase not initialized in AuthProvider: $e");
+    }
     _init();
   }
 
   Future<void> _init() async {
-    _auth.authStateChanges().listen((User? user) async {
+    _auth?.authStateChanges().listen((User? user) async {
       if (user != null) {
         await _fetchUserProfile(user.uid);
       } else {
@@ -34,7 +41,7 @@ class AuthProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      final doc = await _firestore.collection('users').doc(uid).get();
+      final doc = await _firestore?.collection('users').doc(uid).get();
       if (doc.exists) {
         _userProfile = UserProfile.fromMap(doc.data()!, doc.id);
       }
@@ -52,10 +59,10 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
 
       // For MVP we can use anonymous login and store name
-      final userCredential = await _auth.signInAnonymously();
+      final userCredential = await _auth?.signInAnonymously();
 
       final newUser = UserProfile(id: userCredential.user!.uid, name: name);
-      await _firestore.collection('users').doc(newUser.id).set(newUser.toMap());
+      await _firestore?.collection('users').doc(newUser.id).set(newUser.toMap());
 
       _userProfile = newUser;
     } catch (e) {
@@ -69,7 +76,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> updateGoals(List<String> newGoals) async {
     if (_userProfile != null) {
       _userProfile = _userProfile!.copyWith(goals: newGoals);
-      await _firestore.collection('users').doc(_userProfile!.id).update({'goals': newGoals});
+      await _firestore?.collection('users').doc(_userProfile!.id).update({'goals': newGoals});
       notifyListeners();
     }
   }
@@ -80,7 +87,7 @@ class AuthProvider with ChangeNotifier {
         int newLevel = (newPoints / 100).floor() + 1; // 1 level per 100 points
 
         _userProfile = _userProfile!.copyWith(points: newPoints, level: newLevel);
-        await _firestore.collection('users').doc(_userProfile!.id).update({
+        await _firestore?.collection('users').doc(_userProfile!.id).update({
           'points': newPoints,
           'level': newLevel,
         });
@@ -89,6 +96,6 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _auth.signOut();
+    await _auth?.signOut();
   }
 }

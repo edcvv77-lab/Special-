@@ -8,7 +8,7 @@
 PRODUCT_NAME = khas
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.khas.khas
+PRODUCT_BUNDLE_IDENTIFIER = com.example.khas
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.khas. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.

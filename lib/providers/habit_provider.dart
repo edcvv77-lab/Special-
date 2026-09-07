@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore?.dart';
+import 'package:firebase_auth/firebase_auth?.dart';
 import '../models/habit.dart';
 import 'auth_provider.dart';
 
 class HabitProvider with ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore? _firestore;
+  FirebaseAuth? _auth;
+
 
   List<Habit> _habits = [];
   bool _isLoading = false;
@@ -28,7 +29,13 @@ class HabitProvider with ChangeNotifier {
   }
 
   HabitProvider() {
-    _auth.authStateChanges().listen((User? user) {
+    try {
+      _auth = FirebaseAuth.instance;
+      _firestore = FirebaseFirestore.instance;
+    } catch(e) {
+      print("Firebase not initialized in HabitProvider: $e");
+    }
+    _auth?.authStateChanges().listen((User? user) {
       if (user != null) {
         _listenToHabits(user.uid);
       } else {
@@ -42,7 +49,7 @@ class HabitProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _firestore.collection('users').doc(uid).collection('habits').snapshots().listen((snapshot) {
+    _firestore?.collection('users').doc(uid).collection('habits').snapshots().listen((snapshot) {
       _habits = snapshot.docs.map((doc) => Habit.fromMap(doc.data(), doc.id)).toList();
       _isLoading = false;
       notifyListeners();
@@ -50,7 +57,7 @@ class HabitProvider with ChangeNotifier {
   }
 
   Future<void> addHabit(Habit habit) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user != null) {
       await _firestore
           .collection('users')
@@ -62,7 +69,7 @@ class HabitProvider with ChangeNotifier {
   }
 
   Future<void> toggleHabitCompletion(String id, AuthProvider authProvider) async {
-    final user = _auth.currentUser;
+    final user = _auth?.currentUser;
     if (user != null) {
       final index = _habits.indexWhere((h) => h.id == id);
       if (index >= 0) {
